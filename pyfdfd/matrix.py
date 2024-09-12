@@ -226,8 +226,6 @@ class OperationMatrix:
             Idxcorner = np.copy(idx_corner)
             
             # OW eqn (1/2): left/right/bottom/top sides
-             
-#             irow_OW, icol_OW, val_OW = owcoeff_foursides(self.FD_side, gamma0, beta_k, Idxside, self.Idx_nb_for_side, irow_OW, icol_OW, val_OW) # version 2
             
             # left side
             idx_nb = (self.Idx_nb_for_side)[0, :]
@@ -245,39 +243,6 @@ class OperationMatrix:
             idx_nb = (self.Idx_nb_for_side)[3, :]
             irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_side, gamma0, beta_k, idx_t, idx_nb, irow_OW, icol_OW, val_OW)
                 
-#             if self.typeOWeqn == 'MUR2' and self.oworder == '1st-onesided': # version 1
-                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_l, np.array([1, 2, -nx, nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_r, np.array([-1, -2, -nx, nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                 
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                
-#             elif self.typeOWeqn == 'MUR2' and self.oworder == '2nd-onesided':
-                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_l, np.array([1, 2, -nx, nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_r, np.array([-1, -2, -nx, nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-            
-#             elif self.typeOWeqn == 'MUR1' and self.oworder == '2nd-onesided': # need rewrite !        
-            
-#                 ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_l, np.array([1, 2]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#                 ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_r, np.array([-1, -2]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#                 ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_b, np.array([nx, 2*nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#                 ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_t, np.array([-nx, -2*nx]), gamma0)
-#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                
             # OW eqn (2/2): corners
             
             if self.oworder == '1st-onesided':
@@ -287,17 +252,8 @@ class OperationMatrix:
                 irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
                 irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
                 
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma0)
-#             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[1], np.array([-1, nx]), gamma0)
-#             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[2], np.array([1, -nx]), gamma0)
-#             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[3], np.array([-1, -nx]), gamma0)
-#             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-
             elif self.oworder == '2nd-onesided':
-        
+                
                 irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[0], np.array([1, 2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
                 irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[1], np.array([-1, -2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
                 irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[2], np.array([1, 2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)

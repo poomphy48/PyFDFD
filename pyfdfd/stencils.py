@@ -77,11 +77,11 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
         a0, a1, a2 = 1, -1, 0 # 2nd-order of accuracy in normal dev.
         b0, b1 = 0, 0
         
-        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2
+        const_ow = a0 - 1j*gamma0
         
-        nb, npoint = 4, len(idx_pos)
+        nb, npoint = 1, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_ow
+        coeff = np.array([a1]) / const_ow
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
@@ -100,11 +100,11 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
         a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd-order of accuracy in normal dev.
         b0, b1 = 0, 0
         
-        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2
+        const_ow = a0 - 1j*gamma0
         
-        nb, npoint = 4, len(idx_pos)
+        nb, npoint = 2, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_ow
+        coeff = np.array([a1, a2]) / const_ow
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
@@ -125,9 +125,9 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
         
         const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2
         
-        nb, npoint = 4, len(idx_pos)
+        nb, npoint = 3, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_ow
+        coeff = np.array([1j*gamma0*a1, 0.5*b1, 0.5*b1]) / const_ow
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
@@ -167,13 +167,13 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
         idx_shift: np.array        
         
         m = np.sqrt(2) # OW equation: (\partial_n - i*k0*m) u_sc = 0
-        a0, a1, a2 = 1, -1, 0 # 1st-order of accuracy in normal dev.
+        a0, a1 = 1, -1 # 1st-order of accuracy in normal dev.
     
         const_ow = a0 + a0 - 1j*m*gamma0
         
-        nb, npoint = 4, 1
+        nb, npoint = 2, 1
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([a1, a2, a1, a2]) / const_ow
+        coeff = np.array([a1, a1]) / const_ow
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
@@ -191,7 +191,6 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
         
         m = np.sqrt(2) # OW equation: (\partial_n - i*k0*m) u_sc = 0
         a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd-order of accuracy in normal dev.
-        # a0, a1, a2 = 1, -1, 0
     
         const_ow = a0 + a0 - 1j*m*gamma0
         

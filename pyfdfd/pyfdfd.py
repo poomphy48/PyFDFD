@@ -1,5 +1,4 @@
 import numpy as np
-# from scipy.sparse import linalg, diags, spmatrix
 from scipy.sparse import linalg
 import matplotlib.pyplot as plt
 
@@ -37,7 +36,7 @@ class Simulation:
         if ObjectHH2D.shape != (self.nyHH, self.nxHH):
             raise Exception(f'The size of ObjectHH2D does not match to the physical domain ({self.nyHH},{self.nxHH})') 
         
-        self.Mat2D[self.nly:-self.nly, self.nly:-self.nly] = ObjectHH2D
+        self.MatHH2D = ObjectHH2D
         
     def objectinfo(self, typeObject, geometry, epsrmat):   
         
@@ -74,14 +73,13 @@ class Simulation:
             # build an rectangular object
             x1, x2, y1, y2 = geometry
             
-            ix1 = round_to_int((x1-self.xmin)/self.gs)
-            ix2 = round_to_int((x2-self.xmin)/self.gs)
-            iy1 = round_to_int((y1-self.ymin)/self.gs)
-            iy2 = round_to_int((y2-self.ymin)/self.gs)
+            ix1 = round_to_int((x1-self.xHHmin)/self.gs)
+            ix2 = round_to_int((x2-self.xHHmin)/self.gs)
+            iy1 = round_to_int((y1-self.yHHmin)/self.gs)
+            iy2 = round_to_int((y2-self.yHHmin)/self.gs)
             
             # add the rectangular object to "MatHH2D" array
-            (self.Mat2D)[iy1:iy2+1, ix1:ix2+1] = epsrmat
-            self.MatHH2D = (self.Mat2D)[nly:-nly, nly:-nly]
+            (self.MatHH2D)[iy1:iy2+1, ix1:ix2+1] = epsrmat
             
         else:
             raise Exception('TypeObject must be either:\n1. circle\n2. rectangle.')
@@ -204,6 +202,7 @@ class Simulation:
         plt.xlabel(r'$x$' + ' [' + unit + ']', fontsize=14)
         plt.ylabel(r'$y$' + ' [' + unit + ']', fontsize=14)
         plt.colorbar()
+        plt.show()
         
 def round_to_int(m):
     
