@@ -18,7 +18,7 @@ def laplace_stencil(order_type, idx_pos, nx):
 
     npoint_hh = len(idx_pos)
 
-    if order_type == '2nd':
+    if order_type == '2nd-central':
         
         ncal = 5
         idx_stencil = np.array([0, -1, 1, -nx, nx]).astype(int)
@@ -28,7 +28,7 @@ def laplace_stencil(order_type, idx_pos, nx):
         idx_col = idx_row + np.tile(idx_stencil, npoint_hh)
         val = np.tile(coeff, npoint_hh)        
         
-    elif order_type == '4th':
+    elif order_type == '4th-central':
         
         ncal = 9
         idx_stencil = np.array([0, -1, 1, -nx, nx, -2, 2, -2*nx, 2*nx]).astype(int)
@@ -50,15 +50,15 @@ def laplace_stencil(order_type, idx_pos, nx):
     
     return idx_row, idx_col, val
 
-def wavenumber_stencil(idx_pos, Mat1D_HH, gamma):
+def wavenumber_stencil(idx_pos, MatHH1D, gamma):
 
     idx_pos: np.array
-    Mat1D_HH: np.array # size = nxHH*nyHH, n = nx*ny > nxHH*nyHH
+    MatHH1D: np.array # size = nxHH*nyHH, n = nx*ny > nxHH*nyHH
     gamma: float
     
     idx_row = np.copy(idx_pos)
     idx_col = np.copy(idx_pos)
-    val = (gamma**2)*np.copy(Mat1D_HH)    
+    val = (gamma**2)*np.copy(MatHH1D)    
     
     return idx_row, idx_col, val
 
@@ -122,19 +122,6 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma, gamma0=-1):
         idx_col = idx_row + np.tile(idx_nb, npoint)
         val = np.tile(coeff, npoint)           
             
-    elif stencil_type == 'corner_1st_bw_3pt_mixed_with_PML':
-
-        idx_shift: np.array # idx_shift = 1,2,nx,2*nx / -1,-2,nx,2*nx / 1,2,-nx,-2*nx / -1,-2,-nx,-2*nx
-        
-        c_ow = (3.0-2.0j*gamma)
-        
-        nb, npoint = 4, 1
-        idx_nb = np.copy(idx_shift)
-        coeff = np.array([-2.0, 0.5, -2.0, 0.5]) / c_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
     ##########################################################################
     
     elif stencil_type == 'side_2nd_bw_3pt':
@@ -204,52 +191,6 @@ def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma, gamma0=-1):
         idx_col = idx_row + np.tile(idx_nb, npoint)
         val = np.tile(coeff, npoint)
     
-    elif stencil_type == 'side_2ndOW_bw_2ndACC_mixed_with_PML':
-        
-        idx_shift: np.array
-        #                normal dev. | tangent dev.
-        # idx_shift (L) =   1,     2 | -nx,  nx
-        # idx_shift (R) =  -1,    -2 | -nx,  nx
-        # idx_shift (B) =  nx,  2*nx |  -1,   1
-        # idx_shift (T) = -nx, -2*nx |  -1,   1
-        
-        a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd order of acc.
-        b0, b1 = -2, 1
-        
-        damp = gamma/gamma0
-        
-        const_ow = 1j*gamma0*a0 + 0.5*damp*b0 + damp*gamma0**2
-        
-        nb, npoint = 4, len(idx_pos)
-        idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*damp*b1, 0.5*damp*b1]) / const_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
-    
-    elif stencil_type == 'side_2ndOW_ct_2ndACC':
-        
-        idx_shift: np.array
-        #                normal dev. | tangent dev.
-        # idx_shift (L) =   1,  -1 | -nx,  nx
-        # idx_shift (R) =  -1,   1 | -nx,  nx
-        # idx_shift (B) =  nx, -nx |  -1,   1
-        # idx_shift (T) = -nx,  nx |  -1,   1
-        
-        a0, a1, a2 = 0, -0.5, 0.5 # 2nd order of acc.
-        b0, b1 = -2, 1
-        
-        const_ow = 1j*gamma*a0 + 0.5*b0 + gamma**2
-        
-        nb, npoint = 4, len(idx_pos)
-        idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma*a1, 1j*gamma*a2, 0.5*b1, 0.5*b1]) / const_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
-        
     elif stencil_type == 'corner_1stOW_2ndACC':
         
         idx_shift: np.array
