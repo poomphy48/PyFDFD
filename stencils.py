@@ -62,146 +62,135 @@ def wavenumber_stencil(idx_pos, MatHH1D, gamma):
     
     return idx_row, idx_col, val
 
-def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma, gamma0=-1):
+def oneway_stencil(stencil_type, idx_pos, idx_shift, gamma0):
 
-    if stencil_type == 'side_1st_bw_2pt':
+    if stencil_type == 'side_MUR1_1stFD':
         
-        idx_shift: int # idx_shift = -1 / 1 / -nx / nx
+        #                normal dev. | tangent dev.
+        # idx_shift (L) =   1,       | 
+        # idx_shift (R) =  -1,       | 
+        # idx_shift (B) =  nx,       | 
+        # idx_shift (T) = -nx,       | 
+        
+        idx_shift: np.array
             
-        c_ow = (1.0-1.0j*gamma)
-
-        nb, npoint = 1, len(idx_pos)
-        idx_nb = np.array([idx_shift]) 
-        coeff = np.array([-1.0]) / c_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
-
-    elif stencil_type == 'corner_1st_bw_2pt':
+        a0, a1, a2 = 1, -1, 0 # 2nd-order of accuracy in normal dev.
+        b0, b1 = 0, 0
         
-        idx_shift: np.array # idx_shift = 1,nx / -1,nx / 1,-nx / -1,-nx
-            
-        c_ow = (2.0-2.0j*gamma)
+        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         
-        nb, npoint = 2, 1
+        nb, npoint = 4, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([-1.0, -1.0]) / c_ow
+        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_owxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
         val = np.tile(coeff, npoint)
+    
+    elif stencil_type == 'side_MUR1_2ndFD':
         
-    ##########################################################################    
-
-    elif stencil_type == 'side_1st_bw_3pt':
+        #                normal dev. | tangent dev.
+        # idx_shift (L) =   1,     2 | 
+        # idx_shift (R) =  -1,    -2 | 
+        # idx_shift (B) =  nx,  2*nx | 
+        # idx_shift (T) = -nx, -2*nx | 
         
-        idx_shift: np.array # idx_shift = -1,-2 / 1,2 / -nx,-2*nx / nx,2*nx
+        idx_shift: np.array
             
-        c_ow = (1.5-1.0j*gamma)
-
-        nb, npoint = 2, len(idx_pos)
+        a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd-order of accuracy in normal dev.
+        b0, b1 = 0, 0
+        
+        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        
+        nb, npoint = 4, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([-2.0, 0.5]) / c_ow
+        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_owxxxxxxxxxxxxxxxxxxx
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
         val = np.tile(coeff, npoint)
-
-    elif stencil_type == 'corner_1st_bw_3pt':
-
-        idx_shift: np.array # idx_shift = 1,2,nx,2*nx / -1,-2,nx,2*nx / 1,2,-nx,-2*nx / -1,-2,-nx,-2*nx
+    
+    elif stencil_type == 'side_MUR2_1stFD':
         
-        c_ow = (3.0-2.0j*gamma)
+        #                normal dev. | tangent dev.
+        # idx_shift (L) =   1        | -nx,  nx
+        # idx_shift (R) =  -1        | -nx,  nx
+        # idx_shift (B) =  nx        |  -1,   1
+        # idx_shift (T) = -nx        |  -1,   1
+        
+        idx_shift: np.array
+        
+        a0, a1, a2 = 1, -1, 0 # 1st-order of accuracy in normal dev.
+        b0, b1 = -2, 1
+        
+        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2
+        
+        nb, npoint = 4, len(idx_pos)
+        idx_nb = np.copy(idx_shift) 
+        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_ow
+
+        idx_row = np.repeat(idx_pos, nb)
+        idx_col = idx_row + np.tile(idx_nb, npoint)
+        val = np.tile(coeff, npoint)
+        
+    elif stencil_type == 'side_MUR2_2ndFD':
+        
+        #                normal dev. | tangent dev.
+        # idx_shift (L) =   1,     2 | -nx,  nx
+        # idx_shift (R) =  -1,    -2 | -nx,  nx
+        # idx_shift (B) =  nx,  2*nx |  -1,   1
+        # idx_shift (T) = -nx, -2*nx |  -1,   1
+        
+        idx_shift: np.array
+            
+        a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd-order of accuracy in normal dev.
+        b0, b1 = -2, 1
+        
+        const_ow = 1j*gamma0*a0 + 0.5*b0 + gamma0**2
+        
+        nb, npoint = 4, len(idx_pos)
+        idx_nb = np.copy(idx_shift) 
+        coeff = np.array([1j*gamma0*a1, 1j*gamma0*a2, 0.5*b1, 0.5*b1]) / const_ow
+
+        idx_row = np.repeat(idx_pos, nb)
+        idx_col = idx_row + np.tile(idx_nb, npoint)
+        val = np.tile(coeff, npoint)
+    
+    elif stencil_type == 'corner_MUR1_1stFD':
+        
+        #                 x-normal dev. | y-normal dev.
+        # idx_shift (BL) =   1,         |  nx
+        # idx_shift (BR) =  -1,         |  nx
+        # idx_shift (TL) =   1,         | -nx
+        # idx_shift (TR) =  -1,         | -nx  
+        
+        idx_shift: np.array        
+        
+        m = np.sqrt(2) # OW equation: (\partial_n - i*k0*m) u_sc = 0
+        a0, a1, a2 = 1, -1, 0 # 1st-order of accuracy in normal dev.
+    
+        const_ow = a0 + a0 - 1j*m*gamma0
         
         nb, npoint = 4, 1
-        idx_nb = np.copy(idx_shift)
-        coeff = np.array([-2.0, 0.5, -2.0, 0.5]) / c_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)           
-            
-    ##########################################################################
-    
-    elif stencil_type == 'side_2nd_bw_3pt':
-        
-        idx_shift: np.array # idx_shift = 1,-nx,nx / -1,-nx,nx / nx,-1,1 / -nx,-1,1
-        
-        s1, s2, s3 = 1, 1, 1 # not work --> (-1)11, 1(-1)1, 11(-1)
-        c_ow = 1j*s1*gamma + s2*(gamma**2) - s3       
-
-        nb, npoint = 3, len(idx_pos)
         idx_nb = np.copy(idx_shift) 
-        coeff = np.array([-1j*s1*gamma, 0.5*s3, 0.5*s3]) / c_ow
+        coeff = np.array([a1, a2, a1, a2]) / const_ow
 
         idx_row = np.repeat(idx_pos, nb)
         idx_col = idx_row + np.tile(idx_nb, npoint)
         val = np.tile(coeff, npoint)
         
-    elif stencil_type == 'corner_2nd_bw_3pt':
+    elif stencil_type == 'corner_MUR1_2ndFD':
         
-        print(':)')
-        
-    ###########################################################################
-    
-    # The 2nd one-way wave equation with the 2nd accuracy of finite difference    
-    
-    elif stencil_type == 'side_2ndOW_bw_1stACC':
-        
-        idx_shift: np.array
-        #                normal dev. | tangent dev.
-        # idx_shift (L) =   1,     2 | -nx,  nx
-        # idx_shift (R) =  -1,    -2 | -nx,  nx
-        # idx_shift (B) =  nx,  2*nx |  -1,   1
-        # idx_shift (T) = -nx, -2*nx |  -1,   1
-        
-        a0, a1, a2 = 1, -1, 0 # 1st order of acc.
-        b0, b1 = -2, 1
-        
-        const_ow = 1j*gamma*a0 + 0.5*b0 + gamma**2
-        
-        nb, npoint = 4, len(idx_pos)
-        idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma*a1, 1j*gamma*a2, 0.5*b1, 0.5*b1]) / const_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
-        
-    elif stencil_type == 'side_2ndOW_bw_2ndACC':
-        
-        idx_shift: np.array
-        #                normal dev. | tangent dev.
-        # idx_shift (L) =   1,     2 | -nx,  nx
-        # idx_shift (R) =  -1,    -2 | -nx,  nx
-        # idx_shift (B) =  nx,  2*nx |  -1,   1
-        # idx_shift (T) = -nx, -2*nx |  -1,   1
-        
-        a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd order of acc.
-        b0, b1 = -2, 1
-        
-        const_ow = 1j*gamma*a0 + 0.5*b0 + gamma**2
-        
-        nb, npoint = 4, len(idx_pos)
-        idx_nb = np.copy(idx_shift) 
-        coeff = np.array([1j*gamma*a1, 1j*gamma*a2, 0.5*b1, 0.5*b1]) / const_ow
-
-        idx_row = np.repeat(idx_pos, nb)
-        idx_col = idx_row + np.tile(idx_nb, npoint)
-        val = np.tile(coeff, npoint)
-    
-    elif stencil_type == 'corner_1stOW_2ndACC':
-        
-        idx_shift: np.array
         #                 x-normal dev. | y-normal dev.
         # idx_shift (BL) =   1,     2    |  nx,   2*nx
         # idx_shift (BR) =  -1,    -2    |  nx,   2*nx
         # idx_shift (TL) =   1,     2    | -nx,  -2*nx
         # idx_shift (TR) =  -1,    -2    | -nx,  -2*nx
         
+        idx_shift: np.array        
+        
         m = np.sqrt(2) # OW equation: (\partial_n - i*k0*m) u_sc = 0
-        a0, a1, a2 = 3/2, -4/2, 1/2
+        a0, a1, a2 = 3/2, -4/2, 1/2 # 2nd-order of accuracy in normal dev.
         # a0, a1, a2 = 1, -1, 0
     
         const_ow = a0 + a0 - 1j*m*gamma

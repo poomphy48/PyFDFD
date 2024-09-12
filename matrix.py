@@ -26,22 +26,34 @@ class OperationMatrix:
         if typeOWeqn == 'MUR1':
             
             if oworder == '1st-onesided':
-                self.FD = 'MUR1_1stFD' # 1st-order Mur with 1st-order one-sided FD scheme
-                self.Idx_nb = np.array([[1], [-1], [nx], [-nx]])
+                # 1st-order Mur with 1st-order one-sided FD scheme
+                self.FD_side = 'side_MUR1_1stFD'
+                self.FD_corner = 'corner_MUR1_1stFD'
+                self.Idx_nb_for_side = np.array([[1], [-1], [nx], [-nx]])
+                self.Idx_nb_for_corner = np.array([[1, nx], [-1, nx], [1, -nx], [-1, -nx]])
             
             elif oworder == '2nd-onesided':
-                self.FD = 'MUR1_2ndFD' # 1st-order Mur with 2nd-order one-sided FD scheme
-                self.Idx_nb = np.array([[1, 2], [-1, -2], [nx, 2*nx], [-nx, -2*nx]])
+                # 1st-order Mur with 2nd-order one-sided FD scheme
+                self.FD_side = 'side_MUR1_2ndFD'
+                self.FD_corner = 'corner_MUR1_2ndFD' 
+                self.Idx_nb_for_side = np.array([[1, 2], [-1, -2], [nx, 2*nx], [-nx, -2*nx]])
+                self.Idx_nb_for_corner = np.array([[1, 2, nx, 2*nx], [-1, -2, nx, 2*nx], [1, 2, -nx, -2*nx], [-1, -2, -nx, -2*nx]])
         
         elif typeOWeqn == 'MUR2':
             
             if oworder == '1st-onesided':
-                self.FD = 'MUR2_1stFD' # 2nd-order Mur with 1st-order one-sided FD scheme
-                self.Idx_nb = np.array([[1, -nx, nx], [-1, -nx, nx], [nx, -1, 1], [-nx, -1, 1]])
+                # 2nd-order Mur with 1st-order one-sided FD scheme
+                self.FD_side = 'side_MUR2_1stFD'
+                self.FD_corner = 'corner_MUR1_1stFD'
+                self.Idx_nb_for_side = np.array([[1, -nx, nx], [-1, -nx, nx], [nx, -1, 1], [-nx, -1, 1]])
+                self.Idx_nb_for_corner = np.array([[1, nx], [-1, nx], [1, -nx], [-1, -nx]])
             
             elif oworder == '2nd-onesided':
-                self.FD = 'MUR2_2ndFD' # 2nd-order Mur with 2nd-order one-sided FD scheme
-                self.Idx_nb = np.array([[1, 2,-nx, nx], [-1, -2, -nx, nx], [nx, 2*nx, -1, 1], [-nx, -2*nx, -1, 1]])            
+                # 2nd-order Mur with 2nd-order one-sided FD scheme
+                self.FD_side = 'side_MUR2_2ndFD'
+                self.FD_corner = 'corner_MUR1_2ndFD'
+                self.Idx_nb_for_side = np.array([[1, 2,-nx, nx], [-1, -2, -nx, nx], [nx, 2*nx, -1, 1], [-nx, -2*nx, -1, 1]])
+                self.Idx_nb_for_corner = np.array([[1, 2, nx, 2*nx], [-1, -2, nx, 2*nx], [1, 2, -nx, -2*nx], [-1, -2, -nx, -2*nx]])
         
         self.epsrbg, self.gamma0 = epsrbg, gamma0
         self.typeOWeqn = typeOWeqn
@@ -222,7 +234,7 @@ class OperationMatrix:
             
             # OW eqn (1/2): left/right/bottom/top sides
              
-            irow_OW, icol_OW, val_OW = owcoeff_foursides(self.FD, beta_k, Idxside, Idx_nb, irow_OW, icol_OW, val_OW)   
+            irow_OW, icol_OW, val_OW = owcoeff_foursides(self.FD, beta_k, Idxside, self.Idx_nb_for_side, irow_OW, icol_OW, val_OW)   
                 
 #             if self.typeOWeqn == 'MUR2' and self.oworder == '1st-onesided':              
                 
@@ -261,11 +273,10 @@ class OperationMatrix:
             
             if self.oworder == '1st-onesided':
                 
-                FD = 'side_1st_bw_3pt'
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[0], np.array([1, nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[1], np.array([-1, nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[0], np.array([1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[1], np.array([-1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
                 
 #             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
@@ -278,11 +289,10 @@ class OperationMatrix:
 
             elif self.oworder == '2nd-onesided':
         
-                FD = 'xxx'
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[0], np.array([1, 2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[1], np.array([-1, -2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[2], np.array([1, 2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[3], np.array([-1, -2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[0], np.array([1, 2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[1], np.array([-1, -2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[2], np.array([1, 2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[3], np.array([-1, -2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
                 
         
         irow_Dg, icol_Dg = irow_Dg.astype(int), icol_Dg.astype(int)
