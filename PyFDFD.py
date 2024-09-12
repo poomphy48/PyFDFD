@@ -2,7 +2,6 @@ import numpy as np
 from scipy.sparse import linalg, diags, spmatrix
 
 from matrix import OperationMatrix
-from ls_computation import compute_G, compute_mask2D
 
 def round_to_int(m):
        
