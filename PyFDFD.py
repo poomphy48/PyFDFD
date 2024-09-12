@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import linalg, diags, spmatrix
 
 from matrix import OperationMatrix
-from LS_computation import compute_G, compute_mask2D
+from ls_computation import compute_G, compute_mask2D
 
 def round_to_int(m):
        
@@ -26,7 +26,7 @@ def average_matrix(A):
     
     return A1
     
-class simulation:
+class Simulation:
     
     '''
     The simulation is a hybrid model that there are two zones:
