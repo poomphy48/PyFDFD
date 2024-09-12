@@ -22,18 +22,41 @@ class OperationMatrix:
         self.n = self.nx*self.ny
         
 #     def configuration(self, epsrbg, gamma0, orderHH, orderOW, typeWeight, typeK, typeDamp, sigma_0): # old version
-    def configuration(self, epsrbg, gamma0, typeOWeqn, orderHH, orderOW, typeWeight):
+    def configuration(self, epsrbg, gamma0, typeOWeqn, hhorder, oworder, typeWeight):
+
+        if typeOWeqn == 'MUR1':
+            
+            if oworder == '1st-onesided':
+                orderOW = '1st_bw_1st' # 1st-order Mur with 1st-order one-sided FD scheme
+            
+            elif oworder == '2nd-onesided':
+                orderOW = '1st_bw_2nd' # 1st-order Mur with 2nd-order one-sided FD scheme
         
+        elif typeOWeqn == 'MUR2':
+            
+            if oworder == '1st-onesided':
+                orderOW = '2nd_bw_1st' # 2nd-order Mur with 1st-order one-sided FD scheme
+            
+            elif oworder == '2nd-onesided':
+                orderOW = '2nd_bw_2nd' # 2nd-order Mur with 2nd-order one-sided FD scheme
+        
+        orderHH = np.copy(hhorder)
         self.epsrbg, self.gamma0 = epsrbg, gamma0
-        self.typeOWeqn, self.orderHH, self.orderOW, self.typeWeight = typeOWeqn, hhorder, oworder, typeWeight,
+        self.typeOWeqn, self.orderHH, self.orderOW, self.typeWeight = typeOWeqn, orderHH, orderOW, typeWeight
         
-        if orderHH != '2nd-central' and orderHH != '4th-central' and orderHH != '9point':            
+        if typeOWeqn != 'MUR1' and typeOWeqn != 'MUR2':            
+            raise Exception('typeOWeqn for the one-way wave equation are:\n1. MUR1\n2. MUR2')
+        
+        if hhorder != '2nd-central' and hhorder != '4th-central' and hhorder != '9point':            
             raise Exception('The FD scheme for the Helmholtz equation (orderHH) are:\n1. 2nd-central\n2. 4th-central\n3. 9 points')
         
-        if orderOW != '1st' and orderOW != '2nd_bw_1st' and orderOW != '2nd_bw_2nd' and orderOW != '2nd_bw_2nd_mixed_with_PML' and orderOW != '2nd_ct':            
-            raise Exception('The FD scheme for the one-way wave equation (orderOW1) are:\n'+
-                            '1. 1st-order\n2. 2nd-order (backward FD + 1st)\n3. 2nd-order (backward FD + 2nd)\n4. 2nd-order (central FD)\n')
+        if orderOW != '1st-onesided' and orderHH != '2nd-onesided':            
+            raise Exception('The FD scheme for the Helmholtz equation (orderHH) are:\n1. 2nd-central\n2. 4th-central\n3. 9 points')
             
+#         if orderOW != '1st' and orderOW != '2nd_bw_1st' and orderOW != '2nd_bw_2nd' and orderOW != '2nd_bw_2nd_mixed_with_PML' and orderOW != '2nd_ct':            
+#             raise Exception('The FD scheme for the one-way wave equation (orderOW) are:\n'+
+#                             '1. 1st-order\n2. 2nd-order (backward FD + 1st)\n3. 2nd-order (backward FD + 2nd)\n4. 2nd-order (central FD)\n')
+
         if typeWeight != 'linear' and typeWeight != 'quadratic' and typeWeight != 'cube' and typeWeight != 'zero' and typeWeight != 'one':
             raise Exception('typeWeight are:\n1. linear\n2. quadratic\n3. cubic\n4. zero\n5. one')
             

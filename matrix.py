@@ -21,19 +21,37 @@ class OperationMatrix:
         self.ny = nyHH + 2*nly        
         self.n = self.nx*self.ny
         
-#     def configuration(self, epsrbg, gamma0, orderHH, orderOW, typeWeight, typeK, typeDamp, sigma_0): # old version
-    def configuration(self, epsrbg, gamma0, typeOWeqn, orderHH, orderOW, typeWeight):
-        
-        self.epsrbg, self.gamma0 = epsrbg, gamma0
-        self.typeOWeqn, self.orderHH, self.orderOW, self.typeWeight = typeOWeqn, hhorder, oworder, typeWeight,
-        
-        if orderHH != '2nd-central' and orderHH != '4th-central' and orderHH != '9point':            
-            raise Exception('The FD scheme for the Helmholtz equation (orderHH) are:\n1. 2nd-central\n2. 4th-central\n3. 9 points')
-        
-        if orderOW != '1st' and orderOW != '2nd_bw_1st' and orderOW != '2nd_bw_2nd' and orderOW != '2nd_bw_2nd_mixed_with_PML' and orderOW != '2nd_ct':            
-            raise Exception('The FD scheme for the one-way wave equation (orderOW1) are:\n'+
-                            '1. 1st-order\n2. 2nd-order (backward FD + 1st)\n3. 2nd-order (backward FD + 2nd)\n4. 2nd-order (central FD)\n')
+    def configuration(self, epsrbg, gamma0, typeOWeqn, hhorder, oworder, typeWeight):
+
+        if typeOWeqn == 'MUR1':
             
+            if oworder == '1st-onesided':
+                orderOW = '1st_bw_1st' # 1st-order Mur with 1st-order one-sided FD scheme
+            
+            elif oworder == '2nd-onesided':
+                orderOW = '1st_bw_2nd' # 1st-order Mur with 2nd-order one-sided FD scheme
+        
+        elif typeOWeqn == 'MUR2':
+            
+            if oworder == '1st-onesided':
+                orderOW = '2nd_bw_1st' # 2nd-order Mur with 1st-order one-sided FD scheme
+            
+            elif oworder == '2nd-onesided':
+                orderOW = '2nd_bw_2nd' # 2nd-order Mur with 2nd-order one-sided FD scheme
+        
+        orderHH = np.copy(hhorder)
+        self.epsrbg, self.gamma0 = epsrbg, gamma0
+        self.typeOWeqn, self.orderHH, self.orderOW, self.typeWeight = typeOWeqn, orderHH, orderOW, typeWeight
+        
+        if typeOWeqn != 'MUR1' and typeOWeqn != 'MUR2':            
+            raise Exception('typeOWeqn for the one-way wave equation are:\n1. MUR1\n2. MUR2')
+        
+        if hhorder != '2nd-central' and hhorder != '4th-central' and hhorder != '9point':            
+            raise Exception('The FD scheme for the Helmholtz equation (hhorder) are:\n1. 2nd-central\n2. 4th-central\n3. 9 points')
+        
+        if oworder != '1st-onesided' and orderHH != '2nd-onesided':            
+            raise Exception('The FD scheme for the one-way wave equation (oworder) are:\n1. 1st-onesided\n2. 2nd-onesided')
+
         if typeWeight != 'linear' and typeWeight != 'quadratic' and typeWeight != 'cube' and typeWeight != 'zero' and typeWeight != 'one':
             raise Exception('typeWeight are:\n1. linear\n2. quadratic\n3. cubic\n4. zero\n5. one')
             
@@ -60,47 +78,48 @@ class OperationMatrix:
         nx, ny, nly = self.nx, self.ny, self.nly
         n = self.n
         
-        # Part 1: Spatial term
-        if orderHH == '2nd':     
+        # part 1/2: spatial-operation matrix, (d^2/dx^2 + d^2/dy^2)
+        if orderHH == '2nd-central':     
         
             # coefficients = -4, 1, 1, 1, 1
             idx_pos = (((np.arange(n)).reshape([ny, nx]))[nly:-nly, nly:-nly]).flatten()
-            ir, ic, v = laplace_stencil('2nd', idx_pos, nx)
+            ir, ic, v = laplace_stencil('2nd-central', idx_pos, nx)
             A1_spatial = csr_matrix((v, (ir, ic)), shape=(n, n), dtype=np.complex64)
         
-        elif orderHH == '4th' and nly != 1:
+        elif orderHH == '4th-central' and nly != 1:
             
             # coefficients = -5, 16/12, 16/12, 16/12, 16/12, -1/12, -1/12, -1/12, -1/12
             idx_pos = (((np.arange(n)).reshape([ny, nx]))[nly:-nly, nly:-nly]).flatten()
-            ir, ic, v = laplace_stencil('4th', idx_pos, nx)
+            ir, ic, v = laplace_stencil('4th-central', idx_pos, nx)
             A1_spatial = csr_matrix((v, (ir, ic)), shape=(n, n), dtype=np.complex64)
             
-        elif orderHH == '4th' and nly == 1:      
+        elif orderHH == '4th-central' and nly == 1:      
         
-            # phy = physical domain = inside + boundary of phy.domain
+            # phy = inside phy. domain + boundary of phy. domain
             irow_phy, icol_phy, val_phy = [], [], []
             
-            # Inside phy.domain: coefficients = -5, 16/12, 16/12, 16/12, 16/12, -1/12, -1/12, -1/12, -1/12
+            # inside phy. domain: coefficients = -5, 16/12, 16/12, 16/12, 16/12, -1/12, -1/12, -1/12, -1/12
             idx_pos = (((np.arange(n)).reshape([ny, nx]))[nly+1:-nly-1, nly+1:-nly-1]).flatten()
-            ir, ic, v = laplace_stencil('4th', idx_pos, nx)
+            ir, ic, v = laplace_stencil('4th-central', idx_pos, nx)
             irow_phy, icol_phy, val_phy = np.append(irow_phy, ir), np.append(icol_phy, ic), np.append(val_phy, v)
             
-            # Boundary of phy.domainn: coefficients = -4, 1, 1, 1, 1
+            # boundary of phy. domainn: coefficients = -4, 1, 1, 1, 1
             ix1, ix2 = nly, (nx - 1) - nly
             iy1, iy2 = nly, (ny - 1) - nly
             
             idx_corner, idx_l, idx_r, idx_b, idx_t = generate_index(ix1, ix2, iy1, iy2, nx)
             idx_pos = np.concatenate((idx_corner, idx_l, idx_r, idx_b, idx_t))
-            ir, ic, v = laplace_stencil('2nd', idx_pos, nx)
+            ir, ic, v = laplace_stencil('2nd-central', idx_pos, nx)
             irow_phy, icol_phy, val_phy = np.append(irow_phy, ir), np.append(icol_phy, ic), np.append(val_phy, v)
             
             A1_spatial = csr_matrix((val_phy, (irow_phy, icol_phy)), shape=(n, n), dtype=np.complex64)
         
-        # Part 2: Wavenumber term: coefficient = (gamma0**2)*epsr
+        # part 2/2: wavenumber term, (gamma0**2)*epsr
         idx_pos = (((np.arange(n)).reshape([ny, nx]))[nly:-nly, nly:-nly]).flatten()
         ir, ic, v = wavenumber_stencil(idx_pos, self.Mat1D_HH, gamma0)
         A1_wavenumber = csr_matrix((v, (ir, ic)), shape=(n, n), dtype=np.complex64)
-                   
+         
+        # the operation matrix A for inner zone (physical domain)
         A1 = A1_spatial + A1_wavenumber
         
         return A1, A1_spatial, A1_wavenumber
@@ -108,7 +127,7 @@ class OperationMatrix:
     def build_A2(self):
         
         '''
-        The operation matrix A for transition zone (+ boundary layer)        
+        The operation matrix A for transition zone + boundary layer        
         '''
         
         gamma0, sigma_0 = self.gamma0, self.sigma_0
@@ -139,32 +158,8 @@ class OperationMatrix:
             elif self.typeWeight == 'one':
                 beta_k = 1        
             
-            
             else:
-                raise Exception('The category of typeWeight are:\n linear, quadratic, cube, zero.')
-            
-            if self.typeK == '1':
-                damp = 1 + 1j*((k/nly)**2)*sigma_0
-            elif self.typeK == '2':
-                damp = np.sqrt(1 - 1j*((k/nly)**2)*sigma_0)
-            else:
-                damp = 1
-            
-            if self.typeDamp == 'non':
-                damp_HH = 1
-                damp_OW = 1
-            elif self.typeDamp == 'HH':
-                damp_HH = np.copy(damp)
-                damp_OW = 1
-            elif self.typeDamp == 'OW':
-                damp_HH = 1
-                damp_OW = np.copy(damp)
-            elif self.typeDamp == 'HHOW':
-                damp_HH = np.copy(damp)
-                damp_OW = np.copy(damp)
-
-            gamma_HH = damp_HH*gamma0
-            gamma_OW = damp_OW*gamma0              
+                raise Exception('The categories of typeWeight are:\n linear, quadratic, cube, zero, one.')            
                          
             alpha_k = 1 - beta_k
             ALPHA, BETA = np.append(ALPHA, alpha_k), np.append(BETA, beta_k)
@@ -177,7 +172,7 @@ class OperationMatrix:
             idx_side = np.concatenate((idx_l, idx_r, idx_b, idx_t))
             idx_pos = np.concatenate((idx_corner, idx_side))            
             
-            #%% The linear combination of two equations: diagonal term A^Diag_2
+            #%% The linear combination of two equations: diagonal term A^{Diag}_2
             ir, ic = np.copy(idx_pos), np.copy(idx_pos)           
             v = 1*np.ones_like(idx_pos)
             irow_Dg, icol_Dg, val_Dg = np.append(irow_Dg, ir), np.append(icol_Dg, ic), np.append(val_Dg, v)
@@ -216,7 +211,7 @@ class OperationMatrix:
                 
                 irow_HH, icol_HH, val_HH = np.append(irow_HH, ir), np.append(icol_HH, ic), np.append(val_HH, v)
             
-            #%% The weighted One-way wave equation
+            #%% The weighted one-way wave equation
             
             # OW eqn (1/2): left/right/bottom/top sides
             if self.orderOW == '2nd_ct':
