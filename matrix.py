@@ -45,7 +45,12 @@ class OperationMatrix:
         
         orderHH = np.copy(hhorder)
         self.epsrbg, self.gamma0 = epsrbg, gamma0
-        self.typeOWeqn, self.orderHH, self.orderOW, self.typeWeight = typeOWeqn, orderHH, orderOW, typeWeight
+        self.typeOWeqn = typeOWeqn
+        self.orderHH = orderHH# should delete
+        self.orderOW = orderOW# should delete
+        self.hhorder = hhorder
+        self.oworder = oworder
+        self.typeWeight = typeWeight
         
         if typeOWeqn != 'MUR1' and typeOWeqn != 'MUR2':            
             raise Exception('typeOWeqn for the one-way wave equation are:\n1. MUR1\n2. MUR2')
@@ -216,9 +221,11 @@ class OperationMatrix:
             
             #%% The weighted one-way wave equation
             
-            # OW eqn (1/2): left/right/bottom/top sides
-            
+            # recreate arrays to easily implementation
             Idxside = idx_l, idx_r, idx_b, idx_t
+            Idxcorner = np.copy(idx_corner)
+            
+            # OW eqn (1/2): left/right/bottom/top sides
                        
             if self.orderOW == '2nd_bw_1st':
                 
@@ -266,9 +273,15 @@ class OperationMatrix:
 #                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
                 
             # OW eqn (2/2): corners
-
-            FD = 'side_1st_bw_3pt'
-                irow_OW, icol_OW, val_OW = owcoeff_foursides(FD, beta_k, Idxside, Idx_nb, irow_OW, icol_OW, val_OW)
+            
+            if self.oworder == '1st-onesided':
+                
+                FD = 'side_1st_bw_3pt'
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[0], np.array([1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[1], np.array([-1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(FD, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
+                
 #             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
 #             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[1], np.array([-1, nx]), gamma0)
@@ -277,6 +290,8 @@ class OperationMatrix:
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
 #             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[3], np.array([-1, -nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
+
+            elif self.oworder == '2nd-onesided':
         
         irow_Dg, icol_Dg = irow_Dg.astype(int), icol_Dg.astype(int)
         irow_OW, icol_OW = irow_OW.astype(int), icol_OW.astype(int)
