@@ -180,8 +180,8 @@ class OperationMatrix:
             #%% The weighted Helmholtz equation
             # HH eqn: off-diagonal matrix A^HH_2
             
-            if self.orderHH == '2nd':
-                const_hh = -4 + (gamma_HH**2)*self.epsrbg
+            if self.orderHH == '2nd-central':
+                const_hh = -4 + (gamma0**2)*self.epsrbg
                 idx_nb = np.array([-1, 1, -nx, nx])
                 coeff_nb = np.array([1, 1, 1, 1])                
             

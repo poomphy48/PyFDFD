@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.sparse import linalg, diags, spmatrix
+# from scipy.sparse import linalg, diags, spmatrix
+from scipy.sparse import linalg
 
 from matrix import OperationMatrix
 
@@ -51,10 +52,6 @@ class Simulation:
         
         # initialize the relative permittivty distribution inside the physical domain 
         self.MatHH2D = self.epsrbg*np.ones([self.nyHH, self.nxHH], dtype=np.complex64)
-        
-        # background medium (half-integer grid --> '_' at the end of variable name)
-#         self.Mat2D_ = self.epsrbg*np.ones([self.ny+1, self.nx+1], dtype=np.complex64)
-#         self.Mat2D = self.epsrbg*np.ones([self.ny, self.nx], dtype=np.complex64)
         
     def domain(self, xHHmin, xHHmax, yHHmin, yHHmax, t):
         
@@ -170,7 +167,7 @@ class Simulation:
         else:
             raise Exception('typeSource must be either:\n1. PW (plane wave)\n2. PTS (single point source)')
     
-    def boundarycondtion(self, owparam):
+    def boundarycondition(self, owparam):
         
         '''
         in this code, typeOWeqn can be either 'MUR1' or 'MUR2'.
@@ -181,7 +178,6 @@ class Simulation:
     def fdscheme(self, hhorder, oworder):
         self.hhorder, self.oworder = hhorder, oworder
             
-#     def hhsolver(self, orderHH, orderOW, typeWeight, typeK, typeDamp, sigma_0): # old version
     def hhsolver(self):
         
         # map the information from the physical domain (nyHH, nxHH) to computational domain (ny, nx)  
@@ -194,7 +190,6 @@ class Simulation:
         
         # build the operation matrix A
         matrix = OperationMatrix(self.nxHH, self.nyHH, self.nly)
-#         matrix.configuration(self.epsrbg, self.gamma0, orderHH, orderOW, typeWeight, typeK, typeDamp, sigma_0) # old version
         matrix.configuration(self.epsrbg, self.gamma0, self.typeOWeqn, self.hhorder, self.oworder, self.typeWeight)
         matrix.medium(self.Mat2D)
         self.A = matrix.build_A()
