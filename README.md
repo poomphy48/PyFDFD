@@ -7,4 +7,4 @@ The Python-based framework is designed to solve the scalar wave equation in freq
 - **Customizable numerical parameters**: Users can define medium properties (e.g., permittivity, permeability) and geometric shapes of objects directly in the simulation.
 - **Various ABCs**: Supports various types of the absorbing boundary conditions (ABCs), allowing users to select the preferred method for solving the scattering problems.
 - **Scalable Framework**: The framewok allows for future developments, including the addition of more ABC methods and the implementation of more complex finite-difference (FD) stencils.
-- **User-Friendly**: The framework is simple to use. It suitable for researchers without much difficulties.
+- **User-Friendly**: The framework is simple to use. It is suitable for researchers without much difficulties.
