@@ -12,6 +12,33 @@ def round_to_int(m):
     
     return mr
 
+def add_owcoeff_oneside(FD, beta, idxside, idx_nb, irow, icol, val):
+    
+    ir, ic, v = oneway_stencil(FD, idxside, idx_nb, gamma0)
+    irow = np.append(irow, ir)
+    icol = np.append(icol, ic)
+    val = np.append(val, beta*v)
+    
+    return irow, icol, val
+
+def add_owcoeff_foursides(FD, beta, idxside, idx_nb, irow, icol, val)
+
+    # left side
+    idx_nb = np.array([1, 2, -nx, nx])
+    irow_OW, icol_OW, val_OW = add_owcoeff(FD, beta, idx_l, idx_nb, irow_OW, icol_OW, val_OW)
+
+    # right side
+    idx_nb = np.array([-1, -2, -nx, nx])
+    irow_OW, icol_OW, val_OW = add_owcoeff(FD, bete, idx_r, idx_nb, irow_OW, icol_OW, val_OW)
+
+    # bottom side
+    idx_nb = np.array([nx, 2*nx, -1, 1])
+    irow_OW, icol_OW, val_OW = add_owcoeff(FD, beta, idx_b, idx_nb, irow_OW, icol_OW, val_OW)
+
+    # top side
+    idx_nb = np.array([-nx, -2*nx, -1, 1])
+    irow_OW, icol_OW, val_OW = add_owcoeff(FD, beta, idx_t, idx_nb, irow_OW, icol_OW, val_OW)
+
 class OperationMatrix:
     
     def __init__(self, nxHH, nyHH, nly):
@@ -185,19 +212,19 @@ class OperationMatrix:
                 idx_nb = np.array([-1, 1, -nx, nx])
                 coeff_nb = np.array([1, 1, 1, 1])                
             
-            elif self.orderHH == '4th':
+            elif self.orderHH == '4th-central':
                 
                 if k == nly-1:
-                    const_hh = -4 + (gamma_HH**2)*self.epsrbg
+                    const_hh = -4 + (gamma0**2)*self.epsrbg
                     idx_nb = np.array([-1, 1, -nx, nx])
                     coeff_nb = np.array([1, 1, 1, 1])   
                 else:
-                    const_hh = -5 + (gamma_HH**2)*self.epsrbg
+                    const_hh = -5 + (gamma0**2)*self.epsrbg
                     idx_nb = np.array([-1, 1, -nx, nx, -2, 2, 2*nx, -2*nx])
                     coeff_nb = np.array([16/12, 16/12, 16/12, 16/12, -1/12, -1/12, -1/12, -1/12]) 
             
             elif self.orderHH == '9point':
-                const_hh = -3 + (gamma_HH**2)*self.epsrbg
+                const_hh = -3 + (gamma0**2)*self.epsrbg
                 idx_nb = np.array([-1, 1, -nx, nx, -nx-1, -nx+1, nx-1, nx+1])
                 coeff_nb = np.array([1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4])            
             
@@ -214,95 +241,54 @@ class OperationMatrix:
             #%% The weighted one-way wave equation
             
             # OW eqn (1/2): left/right/bottom/top sides
-            if self.orderOW == '2nd_ct':
-                if k == nly:
-                    ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_l, np.array([1, 2, -nx, nx]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_r, np.array([-1, -2, -nx, nx]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                    
-                else:                   
-                    ir, ic, v = oneway_stencil('side_2ndOW_ct_2ndACC', idx_l, np.array([1, -1, -nx, nx]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_ct_2ndACC', idx_r, np.array([-1, 1, -nx, nx]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_ct_2ndACC', idx_b, np.array([nx, -nx, -1, 1]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                    ir, ic, v = oneway_stencil('side_2ndOW_ct_2ndACC', idx_t, np.array([-nx, nx, -1, 1]), gamma_OW)
-                    irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-            
-            elif self.orderOW == '2nd_bw_1st':
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_l, np.array([1, 2, -nx, nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_r, np.array([-1, -2, -nx, nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
+                       
+            if self.orderOW == '2nd_bw_1st':
+                
+                FD = 'side_2ndOW_bw_1stACC'
+                
+                                
+                
+#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_l, , gamma0)
+#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v) 
+                
+#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_r, np.array([-1, -2, -nx, nx]), gamma0)
+#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v) 
+                
+#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma0)
+#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
+                
+#                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma0)
+#                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
                 
             elif self.orderOW == '2nd_bw_2nd':
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_l, np.array([1, 2, -nx, nx]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_l, np.array([1, 2, -nx, nx]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_r, np.array([-1, -2, -nx, nx]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_r, np.array([-1, -2, -nx, nx]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_b, np.array([nx, 2*nx, -1, 1]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                
-            elif self.orderOW == '2nd_bw_2nd_mixed_with_PML':
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC_mixed_with_PML', idx_l, np.array([1, 2, -nx, nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC_mixed_with_PML', idx_r, np.array([-1, -2, -nx, nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC_mixed_with_PML', idx_b, np.array([nx, 2*nx, -1, 1]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
-                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC_mixed_with_PML', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma_OW, gamma0)
+                ir, ic, v = oneway_stencil('side_2ndOW_bw_2ndACC', idx_t, np.array([-nx, -2*nx, -1, 1]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
             
             elif self.orderOW == '1st': # need rewrite !            
-                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_l, np.array([1, 2]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_l, np.array([1, 2]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_r, np.array([-1, -2]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_r, np.array([-1, -2]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_b, np.array([nx, 2*nx]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_b, np.array([nx, 2*nx]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_t, np.array([-nx, -2*nx]), gamma_OW)
+                ir, ic, v = oneway_stencil('side_1st_bw_3pt', idx_t, np.array([-nx, -2*nx]), gamma0)
                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
                 
             # OW eqn (2/2): corners
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma_OW)
+#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[1], np.array([-1, nx]), gamma_OW)
+#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[1], np.array([-1, nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[2], np.array([1, -nx]), gamma_OW)
+#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[2], np.array([1, -nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[3], np.array([-1, -nx]), gamma_OW)
+#             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[3], np.array([-1, -nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-            
-            if self.orderOW == '2nd_bw_2nd_mixed_with_PML':
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt_mixed_with_PML', idx_corner[0], np.array([1, 2, nx, 2*nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt_mixed_with_PML', idx_corner[1], np.array([-1, -2, nx, 2*nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt_mixed_with_PML', idx_corner[2], np.array([1, 2, -nx, -2*nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt_mixed_with_PML', idx_corner[3], np.array([-1, -2, -nx, -2*nx]), gamma_OW, gamma0)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-            else:
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt', idx_corner[0], np.array([1, 2, nx, 2*nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt', idx_corner[1], np.array([-1, -2, nx, 2*nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt', idx_corner[2], np.array([1, 2, -nx, -2*nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
-                ir, ic, v = oneway_stencil('corner_1st_bw_3pt', idx_corner[3], np.array([-1, -2, -nx, -2*nx]), gamma_OW)
-                irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
         
         irow_Dg, icol_Dg = irow_Dg.astype(int), icol_Dg.astype(int)
         irow_OW, icol_OW = irow_OW.astype(int), icol_OW.astype(int)

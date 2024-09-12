@@ -1,30 +1,9 @@
 import numpy as np
 # from scipy.sparse import linalg, diags, spmatrix
 from scipy.sparse import linalg
+import matplotlib.pyplot as plt
 
 from matrix import OperationMatrix
-
-def round_to_int(m):
-       
-    if (m-int(m) >= 0.5):
-        mr = np.ceil(m).astype(int)
-    else:
-        mr = np.floor(m).astype(int)
-    
-    return mr
-
-def average_matrix(A):
-    
-    ny, nx = A.shape    
-    A1 = np.zeros([ny-1, nx-1], dtype=np.complex64)
-    
-    for ir in range(ny-1):
-        for ic in range(nx-1):            
-            A1[ir, ic] = A[ir, ic] + A[ir, ic+1] + A[ir+1, ic] + A[ir+1, ic+1]
-            
-    A1 = 0.25*A1
-    
-    return A1
     
 class Simulation:
     
@@ -52,22 +31,6 @@ class Simulation:
         
         # initialize the relative permittivty distribution inside the physical domain 
         self.MatHH2D = self.epsrbg*np.ones([self.nyHH, self.nxHH], dtype=np.complex64)
-        
-    def domain(self, xHHmin, xHHmax, yHHmin, yHHmax, t):
-        
-        self.t = t
-        
-        self.nly = round_to_int(t/self.gs)
-                
-        self.nx = self.nxHH + 2*self.nly
-        self.ny = self.nyHH + 2*self.nly
-        self.xmin, self.xmax = xHHmin - t, xHHmax + t
-        self.ymin, self.ymax = yHHmin - t, yHHmax + t
-        
-        self.x = np.linspace(self.xmin, self.xmax, self.nx)
-        self.y = np.linspace(self.ymin, self.ymax, self.ny)
-                
-        self.X, self.Y = np.meshgrid(self.x, self.y)
     
     def insert_object(self, ObjectHH2D):
 
@@ -172,6 +135,7 @@ class Simulation:
         '''
         in this code, typeOWeqn can be either 'MUR1' or 'MUR2'.
         '''
+        
         self.typeOWeqn, self.nly, self.typeWeight = owparam
         
         
@@ -212,23 +176,29 @@ class Simulation:
         self.UtotHH2D = self.Utot2D[self.nly:-self.nly, self.nly:-self.nly]
                 
         return self.UincHH2D, self.UscatHH2D, self.UtotHH2D
-   
+    
+    def viz(self, data, scale, unit):
         
-    def viz(self, typefield, domain_box):
-        
-        x1, x2, y1, y2 = domain_box
-        
-        ix1 = round_to_int((x1-self.xmin)/self.gs)
-        ix2 = round_to_int((x2-self.xmin)/self.gs)
-        iy1 = round_to_int((y1-self.ymin)/self.gs)
-        iy2 = round_to_int((y2-self.ymin)/self.gs)
-        
-        if typefield == 'sc':            
-            Field2D = np.copy(self.Uscat2D)   
+        if data = 'object':
+            colormap = 'binary'
+            viz2D = np.copy(self.MatHH2D)
             
-        elif typefield == 'tot':            
-            Field2D = np.copy(self.Utot2D)
+        elif data == 'inc':
+            colormap = 'jet'
+            viz2D = np.copy(self.UincHH2D)
             
-        Field2D_viz = Field2D[iy1:iy2+1, ix1:ix2+1]
+        elif data == 'sc':
+            colormap = 'jet'
+            viz2D = np.copy(self.UscatHH2D)
+            
+        elif data == 'tot':
+            colormap = 'jet'
+            viz2D = np.copy(self.UtotHH2D)
         
-        return Field2D_viz
+        ExtHH = np.array([self.xHHmin, self.xHHmax, self.yHHmin, self.yHHmax]) / scale
+            
+        plt.figure(dpi=100)
+        plt.imshow(np.flipud(np.abs(viz2D)), extent=ExtHH, cmap=colormap)
+        plt.xlabel(r'$x$' + ' [' + unit + ']', fontsize=14)
+        plt.ylabel(r'$y$' + ' [' + unit + ']', fontsize=14)
+        plt.colorbar()
