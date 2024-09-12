@@ -138,6 +138,8 @@ class Simulation:
         
         self.typeOWeqn, self.nly, self.typeWeight = owparam
         
+        self.nx = self.nxHH + 2*self.nly
+        self.ny = self.nyHH + 2*self.nly
         
     def fdscheme(self, hhorder, oworder):
         self.hhorder, self.oworder = hhorder, oworder
@@ -164,7 +166,7 @@ class Simulation:
         
         self.Uscat2D = np.copy(x2D)
         
-        if self.typesrc == 'PTS':
+        if self.typeSource == 'PTS':
             self.Utot2D = np.copy(x2D)
             
         else:
@@ -179,7 +181,7 @@ class Simulation:
     
     def viz(self, data, scale, unit):
         
-        if data = 'object':
+        if data == 'object':
             colormap = 'binary'
             viz2D = np.copy(self.MatHH2D)
             
@@ -202,3 +204,25 @@ class Simulation:
         plt.xlabel(r'$x$' + ' [' + unit + ']', fontsize=14)
         plt.ylabel(r'$y$' + ' [' + unit + ']', fontsize=14)
         plt.colorbar()
+        
+def round_to_int(m):
+    
+    if (m-int(m) >= 0.5):
+        mr = np.ceil(m).astype(int)
+    else:
+        mr = np.floor(m).astype(int)
+    
+    return mr
+
+def average_matrix(A):
+    
+    ny, nx = A.shape    
+    A1 = np.zeros([ny-1, nx-1], dtype=np.complex64)
+    
+    for ir in range(ny-1):
+        for ic in range(nx-1):            
+            A1[ir, ic] = A[ir, ic] + A[ir, ic+1] + A[ir+1, ic] + A[ir+1, ic+1]
+            
+    A1 = 0.25*A1
+    
+    return A1

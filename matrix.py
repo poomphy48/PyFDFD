@@ -3,15 +3,6 @@ from scipy.sparse import csr_matrix
 
 from stencils import generate_index, laplace_stencil, wavenumber_stencil, oneway_stencil
 
-def round_to_int(m):
-    
-    if (m-int(m) >= 0.5):
-        mr = np.ceil(m).astype(int)
-    else:
-        mr = np.floor(m).astype(int)
-    
-    return mr
-
 class OperationMatrix:
     
     def __init__(self, nxHH, nyHH, nly):
@@ -22,7 +13,9 @@ class OperationMatrix:
         self.n = self.nx*self.ny
         
     def configuration(self, epsrbg, gamma0, typeOWeqn, hhorder, oworder, typeWeight):
-
+        
+        nx = self.nx
+        
         if typeOWeqn == 'MUR1':
             
             if oworder == '1st-onesided':
@@ -67,7 +60,7 @@ class OperationMatrix:
         if hhorder != '2nd-central' and hhorder != '4th-central' and hhorder != '9point':            
             raise Exception('The FD scheme for the Helmholtz equation (hhorder) are:\n1. 2nd-central\n2. 4th-central\n3. 9 points')
         
-        if oworder != '1st-onesided' and orderHH != '2nd-onesided':            
+        if oworder != '1st-onesided' and oworder != '2nd-onesided':            
             raise Exception('The FD scheme for the one-way wave equation (oworder) are:\n1. 1st-onesided\n2. 2nd-onesided')
 
         if typeWeight != 'linear' and typeWeight != 'quadratic' and typeWeight != 'cube' and typeWeight != 'zero' and typeWeight != 'one':
@@ -145,7 +138,7 @@ class OperationMatrix:
         The operation matrix A for transition zone + boundary layer        
         '''
         
-        gamma0, sigma_0 = self.gamma0, self.sigma_0
+        gamma0 = self.gamma0
         nx, ny, nly = self.nx, self.ny, self.nly
         n = self.n
         
@@ -195,12 +188,12 @@ class OperationMatrix:
             #%% The weighted Helmholtz equation
             # HH eqn: off-diagonal matrix A^HH_2
             
-            if self.orderHH == '2nd-central':
+            if self.hhorder == '2nd-central':
                 const_hh = -4 + (gamma0**2)*self.epsrbg
                 idx_nb = np.array([-1, 1, -nx, nx])
                 coeff_nb = np.array([1, 1, 1, 1])                
             
-            elif self.orderHH == '4th-central':
+            elif self.hhorder == '4th-central':
                 
                 if k == nly-1:
                     const_hh = -4 + (gamma0**2)*self.epsrbg
@@ -211,7 +204,7 @@ class OperationMatrix:
                     idx_nb = np.array([-1, 1, -nx, nx, -2, 2, 2*nx, -2*nx])
                     coeff_nb = np.array([16/12, 16/12, 16/12, 16/12, -1/12, -1/12, -1/12, -1/12]) 
             
-            elif self.orderHH == '9point':
+            elif self.hhorder == '9point':
                 const_hh = -3 + (gamma0**2)*self.epsrbg
                 idx_nb = np.array([-1, 1, -nx, nx, -nx-1, -nx+1, nx-1, nx+1])
                 coeff_nb = np.array([1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4])            
@@ -234,9 +227,25 @@ class OperationMatrix:
             
             # OW eqn (1/2): left/right/bottom/top sides
              
-            irow_OW, icol_OW, val_OW = owcoeff_foursides(self.FD, beta_k, Idxside, self.Idx_nb_for_side, irow_OW, icol_OW, val_OW)   
+#             irow_OW, icol_OW, val_OW = owcoeff_foursides(self.FD_side, gamma0, beta_k, Idxside, self.Idx_nb_for_side, irow_OW, icol_OW, val_OW) # version 2
+            
+            # left side
+            idx_nb = (self.Idx_nb_for_side)[0, :]
+            irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_side, gamma0, beta_k, idx_l, idx_nb, irow_OW, icol_OW, val_OW)
+
+            # right side
+            idx_nb = (self.Idx_nb_for_side)[1, :]
+            irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_side, gamma0, beta_k, idx_r, idx_nb, irow_OW, icol_OW, val_OW)
+
+            # bottom side
+            idx_nb = (self.Idx_nb_for_side)[2, :]
+            irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_side, gamma0, beta_k, idx_b, idx_nb, irow_OW, icol_OW, val_OW)
+
+            # top side
+            idx_nb = (self.Idx_nb_for_side)[3, :]
+            irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_side, gamma0, beta_k, idx_t, idx_nb, irow_OW, icol_OW, val_OW)
                 
-#             if self.typeOWeqn == 'MUR2' and self.oworder == '1st-onesided':              
+#             if self.typeOWeqn == 'MUR2' and self.oworder == '1st-onesided': # version 1
                 
 #                 ir, ic, v = oneway_stencil('side_2ndOW_bw_1stACC', idx_l, np.array([1, 2, -nx, nx]), gamma0)
 #                 irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)                
@@ -273,10 +282,10 @@ class OperationMatrix:
             
             if self.oworder == '1st-onesided':
                 
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[0], np.array([1, nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[1], np.array([-1, nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[0], np.array([1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[1], np.array([-1, nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[2], np.array([1, -nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[3], np.array([-1, -nx]), irow_OW, icol_OW, val_OW)
                 
 #             ir, ic, v = oneway_stencil('corner_1st_bw_2pt', idx_corner[0], np.array([1, nx]), gamma0)
 #             irow_OW, icol_OW, val_OW = np.append(irow_OW, ir), np.append(icol_OW, ic), np.append(val_OW, beta_k*v)
@@ -289,10 +298,10 @@ class OperationMatrix:
 
             elif self.oworder == '2nd-onesided':
         
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[0], np.array([1, 2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[1], np.array([-1, -2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[2], np.array([1, 2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
-                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD, beta_k, Idxcorner[3], np.array([-1, -2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[0], np.array([1, 2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[1], np.array([-1, -2, nx, 2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[2], np.array([1, 2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
+                irow_OW, icol_OW, val_OW = owcoeff_oneside(self.FD_corner, gamma0, beta_k, Idxcorner[3], np.array([-1, -2, -nx, -2*nx]), irow_OW, icol_OW, val_OW)
                 
         
         irow_Dg, icol_Dg = irow_Dg.astype(int), icol_Dg.astype(int)
@@ -321,7 +330,7 @@ class OperationMatrix:
         
         return A
     
-def owcoeff_oneside(FD, beta, idxside, idx_nb, irow, icol, val):
+def owcoeff_oneside(FD, gamma0, beta, idxside, idx_nb, irow, icol, val):
     
     ir, ic, v = oneway_stencil(FD, idxside, idx_nb, gamma0)
     irow = np.append(irow, ir)
@@ -330,22 +339,31 @@ def owcoeff_oneside(FD, beta, idxside, idx_nb, irow, icol, val):
     
     return irow, icol, val
 
-def owcoeff_foursides(FD, beta, Idxside, Idx_nb, irow, icol, val)
+def owcoeff_foursides(FD, gamma0, beta, Idxside, Idx_nb, irow, icol, val):
     
     idx_l, idx_r, idx_b, idx_t = Idxside
     
     # left side
     idx_nb = Idx_nb[0, :]
-    irow, icol, val = owcoeff_oneside(FD, beta, idx_l, idx_nb, irow, icol, val)
+    irow, icol, val = owcoeff_oneside(FD, gamma0, beta, idx_l, idx_nb, irow, icol, val)
 
     # right side
     idx_nb = Idx_nb[1, :]
-    irow, icol, val = owcoeff_oneside(FD, bete, idx_r, idx_nb, irow, icol, val)
+    irow, icol, val = owcoeff_oneside(FD, gamma0, beta, idx_r, idx_nb, irow, icol, val)
 
     # bottom side
     idx_nb = Idx_nb[2, :]
-    irow, icol, val = owcoeff_oneside(FD, beta, idx_b, idx_nb, irow, icol, val)
+    irow, icol, val = owcoeff_oneside(FD, gamma0, beta, idx_b, idx_nb, irow, icol, val)
 
     # top side
     idx_nb = Idx_nb[3, :]
-    irow, icol, val = owcoeff_oneside(FD, beta, idx_t, idx_nb, irow, icol, val)
+    irow, icol, val = owcoeff_oneside(FD, gamma0, beta, idx_t, idx_nb, irow, icol, val)
+
+def round_to_int(m):
+    
+    if (m-int(m) >= 0.5):
+        mr = np.ceil(m).astype(int)
+    else:
+        mr = np.floor(m).astype(int)
+    
+    return mr
