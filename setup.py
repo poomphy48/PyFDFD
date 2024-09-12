@@ -5,7 +5,7 @@ import pyfdfd
 setup(
     name="pyfdfd",
     version=pyfdfd.__version__,
-    description="Finite diff ff",
+    description="",
     author=pyfdfd.__author__,
     author_email=pyfdfd.__email__,
     packages=find_packages(),
