@@ -1,4 +1,4 @@
-# PyFDFD Python Framework
+# PyFDFD Framework
 
 The Python-based framework is designed to solve the scalar wave equation in frequency domain using the finite difference. The framework allows users to easily define and initialize numerical parameters, such as medium properties and object shapes, and provides variuos types of the absorbing boundary conditions (ABCs) to model scattering problems.
 
