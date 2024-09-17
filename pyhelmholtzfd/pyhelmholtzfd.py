@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import linalg
 import matplotlib.pyplot as plt
 
-from matrix import OperationMatrix
+from .matrix import OperationMatrix
     
 class Simulation:
     

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from stencils import generate_index, laplace_stencil, wavenumber_stencil, oneway_stencil
+from .stencils import generate_index, laplace_stencil, wavenumber_stencil, oneway_stencil
 
 class OperationMatrix:
     

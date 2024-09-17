@@ -9,7 +9,9 @@ description = ""
 authors = [
     { name = "Sirawit Inpuak", email = "sirawit.inp@hotmail.com" }
 ]
+
 dependencies = [
-    "scipy>=1.14.1",
-    "numpy>=2.1.1"
+    "numpy>=1.15.1",
+    "scipy>=1.1.0",
+    "matplotlib>=2.2.3"    
 ]
